@@ -130,3 +130,148 @@
 
 ;;; 1.2 Procedures andthe Processes They Generate
 
+;; 1.2.1 Linear Recursion and Iteration
+
+; linear recursive version
+(defun factorial (n)
+  (if (= n 1)
+      1
+    (* n (factorial (- n 1)))))
+
+(factorial 2) ; 2
+(factorial 3) ; 6
+
+; linear iterative version
+(defun factorial (n)
+  (fact-iter 1 1 n))
+
+(defun fact-iter (product counter max-count)
+  (if (> counter max-count)
+      product
+    (fact-iter (* counter product)
+	       (+ counter 1)
+	       max-count)))
+
+; a recursive procedure may yield a linear process,
+; as fact-iter demonstrates. blah blah tail recursion.
+
+; exercise 1.9
+
+(defun plus (a b)
+  (if (= a 0)
+      b
+    (plus (+ (dec a) b)))) ; recursive process
+
+(defun plus (a b)
+  (if (= a 0)
+      b
+    (plus (dec a) (inc b)))) ; iterative process
+
+; exercise 1.10
+
+; The Ackermann function is the simplest example of a well-defined total
+; function which is computable but not primitive recursive.
+; http://mathworld.wolfram.com/AckermannFunction.html
+
+(defun A (x y)
+  "Ackermann's function."
+  (cond ((= y 0) 0)
+	((= x 0) (* 2 y))
+	((= y 1) 2)
+	(t (A (- x 1)
+	      (A x (- y 1))))))
+
+(A 1 10) ; 1024
+(A 2 4)  ; 65536
+(A 3 3)  ; 65536
+
+(defun f (n)
+  "computes 2n"
+  (A 0 n))
+
+(defun g (n)
+  "computes 2^n"
+  (A 1 n))
+
+
+(g 0) ; 0
+(g 1) ; 2
+(g 2) ; 4
+(g 3) ; 8
+(g 4) ; 16
+(g 5) ; 32
+(g 6) ; 64
+
+(defun h (n)
+  "computes 2^^n"
+  (A 2 n))
+
+(h 0) ; 0 = 2^0
+(h 1) ; 2 = 2^1
+(h 2) ; 4 = 2^2
+(h 3) ; 16 = 2^(2^2) = 2^4
+(h 4) ; 65536 = 2^(2^(2^2) = 2^16
+
+;; 1.2.2 Tree Recursion
+
+;          { 0                   if n = 0,
+; Fib(n) = { 1                   if n =1 ,
+;          { Fib(n-1) + Fib(n-2) otherwise.
+
+(defun fib (n)
+  (cond ((= n 0) 0)
+	((= n 1) 1)
+	(t (+ (fib (- n 1))
+	      (fib (- n 1)))))) ; grows exponentially with n :)
+(defun fib (n)
+  (fib-iter 1 0 n)) ; re-cast as an iteration with 3 state variables.
+
+(defun fib-iter (a b count)
+  (if (= count 0)
+      b
+    (fib-iter (+ a b) a (- count 1))))
+
+; counting change
+
+(defun count-change (amount)
+  (cc amount 5))
+
+(defun cc (amount kinds-of-coins)
+  (cond ((= amount 0) 1)
+	((or (< amount 0)
+	     (= kinds-of-coins 0))
+	 0)
+	(t 
+	 (+ (cc amount (- kinds-of-coins 1))
+	    (cc (- amount (first-denomination
+			   kinds-of-coins))
+		kinds-of-coins)))))
+
+(defun first-denomination (kinds-of-coins)
+  (cond ((= kinds-of-coins 1) 1)
+	((= kinds-of-coins 2) 5)
+	((= kinds-of-coins 3) 10)
+	((= kinds-of-coins 4) 25)
+	((= kinds-of-coins 5) 50)))
+
+(count-change 5) ; 2
+(setq max-lisp-eval-depth 100000) ; default is 500
+(count-change 100) ; 292
+
+; exercise 1.11
+
+;        { n                          if n <  3
+; f(n) = { f(n-1) + 2f(n-2) + 3f(n-3) if n >= 3
+;
+
+(defun f (n)
+  "literal / tree recursive version."
+  (if (< n 3) n
+    (+ (f (- n 1)) 
+       (* 2 (f (- n 2)))
+       (* 3 (f (- n 3))))))
+
+(f 3) ; 4
+(f 4) ; 11
+(f 5) ; 25
+
